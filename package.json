@@ -14,6 +14,7 @@
     "docker:down": "docker-compose down",
     "db:migrate": "pnpm --filter backend run db:migrate",
     "db:seed": "pnpm --filter backend run db:seed",
+    "db:setup": "./scripts/migrate-db.sh",
     "prepare": "husky"
   },
   "keywords": [
