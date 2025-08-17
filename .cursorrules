@@ -1,0 +1,44 @@
+# Cursor Rules
+
+## Project Intent
+- Build a clean, modern, scalable codebase with strict TypeScript and well-factored modules.
+
+## Style & Quality
+- Always run: lint, typecheck, tests before proposing diffs.
+- Prefer composition over inheritance; pure functions where possible.
+- No dead code, no TODOs without issue links.
+
+## Architecture
+- Follow SPEC.md and ADRs; if unclear, propose an ADR draft in `/docs/ADR/`.
+- Keep feature boundaries; co-locate domain code with tests.
+
+## Data & Migrations
+- All schema changes via Prisma migrations + migration summary in PR.
+
+## Security
+- Never write secrets to repo; use env placeholders. Validate inputs (Zod/class-validator).
+- Enforce OWASP ASVS controls for auth/session flows.
+
+## Observability
+- Add meaningful logs (structured), metrics (counters/histograms), and traces for new endpoints.
+
+## Docs
+- When adding features, update SPEC.md and relevant docs (PLAYBOOKS/OBSERVABILITY).
+- Generate/update code examples in README when API changes.
+
+## AI Prompts
+- Use `/AIPROMPTS.md` templates for:
+  - test generation
+  - refactor plans
+  - writing ADRs
+  - PR reviews
+
+## Prohibited
+- No broad `any`, no copy-paste from unknown sources, no untyped JSON parsing.
+- No flaky tests in main branches.
+
+## Definition of Done (for AI)
+- Code compiles & passes checks
+- Tests written/updated
+- Docs updated
+- If decision was made → ADR added

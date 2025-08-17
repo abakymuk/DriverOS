@@ -1,0 +1,24 @@
+packages:
+  # Backend
+  - 'packages/backend'
+  
+  # Frontend
+  - 'packages/frontend'
+  
+  # Mobile
+  - 'packages/mobile'
+  
+  # Shared packages
+  - 'packages/shared'
+  - 'packages/config'
+  - 'packages/types'
+  
+  # Tools and scripts
+  - 'tools/*'
+  
+  # Exclude
+  - '!**/node_modules/**'
+  - '!**/dist/**'
+  - '!**/build/**'
+  - '!**/.next/**'
+  - '!**/coverage/**'

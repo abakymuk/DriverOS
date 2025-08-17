@@ -1,0 +1,486 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Core domain models
+model Terminal {
+  id        String   @id @default(cuid())
+  name      String
+  code      String   @unique
+  capacity  Int
+  timezone  String   @default("UTC")
+  status    TerminalStatus @default(ACTIVE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  // Relations
+  vessels     Vessel[]
+  containers  Container[]
+  slots       Slot[]
+  settings    TerminalSettings?
+  schedules   VesselSchedule[]
+
+  @@map("terminals")
+}
+
+model TerminalSettings {
+  id                String   @id @default(cuid())
+  terminalId        String   @unique
+  slotDuration      Int      @default(60) // minutes
+  maxSlotsPerWindow Int      @default(10)
+  operatingHours    Json     // { start: "08:00", end: "18:00" }
+  closedDays        String[] @default([]) // ["sunday", "saturday"]
+  specialRules      Json?    // { emptyReturns: true, dualOps: true }
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  terminal Terminal @relation(fields: [terminalId], references: [id], onDelete: Cascade)
+
+  @@map("terminal_settings")
+}
+
+model Vessel {
+  id             String        @id @default(cuid())
+  name           String
+  eta            DateTime
+  terminalId     String
+  status         VesselStatus  @default(ARRIVING)
+  containerCount Int
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  deletedAt      DateTime?
+
+  // Relations
+  terminal   Terminal    @relation(fields: [terminalId], references: [id], onDelete: Cascade)
+  containers Container[]
+  schedules  VesselSchedule[]
+
+  @@map("vessels")
+}
+
+model VesselSchedule {
+  id               String         @id @default(cuid())
+  vesselId         String
+  terminalId       String
+  eta              DateTime
+  etd              DateTime
+  actualArrival    DateTime?
+  actualDeparture  DateTime?
+  status           ScheduleStatus @default(SCHEDULED)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  // Relations
+  vessel   Vessel   @relation(fields: [vesselId], references: [id], onDelete: Cascade)
+  terminal Terminal @relation(fields: [terminalId], references: [id], onDelete: Cascade)
+
+  @@map("vessel_schedules")
+}
+
+model Container {
+  id        String          @id @default(cuid())
+  cntrNo    String          @unique // ISO 6346 format
+  type      ContainerType
+  line      String          // CMA, MSC, MAE...
+  readyAt   DateTime?
+  hold      Boolean         @default(false)
+  status    ContainerStatus @default(NOT_READY)
+  terminalId String
+  vesselId  String?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  deletedAt DateTime?
+
+  // Relations
+  terminal Terminal      @relation(fields: [terminalId], references: [id], onDelete: Cascade)
+  vessel   Vessel?       @relation(fields: [vesselId], references: [id], onDelete: SetNull)
+  holds    ContainerHold[]
+  trips    Trip[]
+  bookings SlotBooking[]
+
+  @@map("containers")
+}
+
+model ContainerHold {
+  id          String     @id @default(cuid())
+  containerId String
+  reason      HoldReason
+  description String?
+  createdAt   DateTime   @default(now())
+  resolvedAt  DateTime?
+
+  // Relations
+  container Container @relation(fields: [containerId], references: [id], onDelete: Cascade)
+
+  @@map("container_holds")
+}
+
+model Slot {
+  id          String     @id @default(cuid())
+  terminalId  String
+  windowStart DateTime
+  windowEnd   DateTime
+  capacity    Int
+  booked      Int        @default(0)
+  status      SlotStatus @default(AVAILABLE)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  deletedAt   DateTime?
+
+  // Relations
+  terminal Terminal        @relation(fields: [terminalId], references: [id], onDelete: Cascade)
+  bookings SlotBooking[]
+  trips    Trip[]
+
+  @@unique([terminalId, windowStart, windowEnd])
+  @@map("slots")
+}
+
+model SlotBooking {
+  id         String        @id @default(cuid())
+  slotId     String
+  tripId     String
+  driverId   String
+  containerId String
+  status     BookingStatus @default(CONFIRMED)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  // Relations
+  slot      Slot      @relation(fields: [slotId], references: [id], onDelete: Cascade)
+  trip      Trip      @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  driver    Driver    @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  container Container @relation(fields: [containerId], references: [id], onDelete: Cascade)
+
+  @@map("slot_bookings")
+}
+
+model Driver {
+  id           String       @id @default(cuid())
+  name         String
+  phone        String?
+  email        String?
+  status       DriverStatus @default(ACTIVE)
+  licenseNumber String
+  licenseExpiry DateTime
+  carrierId    String
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  deletedAt    DateTime?
+
+  // Relations
+  truck        Truck?
+  trips        Trip[]
+  bookings     SlotBooking[]
+  availability DriverAvailability[]
+  metrics      DriverMetrics?
+
+  @@map("drivers")
+}
+
+model DriverAvailability {
+  id       String            @id @default(cuid())
+  driverId String
+  date     DateTime
+  startTime String           // HH:mm
+  endTime   String           // HH:mm
+  status   AvailabilityStatus @default(AVAILABLE)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  // Relations
+  driver Driver @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  @@map("driver_availability")
+}
+
+model DriverMetrics {
+  id              String @id @default(cuid())
+  driverId        String @unique
+  totalTrips      Int    @default(0)
+  completedTrips  Int    @default(0)
+  failedTrips     Int    @default(0)
+  averageTurnTime Int    @default(0) // minutes
+  totalDistance   Int    @default(0) // km
+  rating          Float  @default(0) // 1-5
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  driver Driver @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  @@map("driver_metrics")
+}
+
+model Truck {
+  id              String     @id @default(cuid())
+  driverId        String     @unique
+  plate           String
+  carrier         String
+  type            TruckType
+  capacity        Int        // tons
+  status          TruckStatus @default(AVAILABLE)
+  lastMaintenance DateTime?
+  nextMaintenance DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  deletedAt       DateTime?
+
+  // Relations
+  driver   Driver         @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  location TruckLocation?
+
+  @@map("trucks")
+}
+
+model TruckLocation {
+  id        String   @id @default(cuid())
+  truckId   String   @unique
+  lat       Float
+  lng       Float
+  timestamp DateTime @default(now())
+  speed     Float?   // km/h
+  heading   Float?   // degrees
+
+  // Relations
+  truck Truck @relation(fields: [truckId], references: [id], onDelete: Cascade)
+
+  @@map("truck_locations")
+}
+
+model Trip {
+  id            String     @id @default(cuid())
+  driverId      String
+  containerId   String
+  pickupSlotId  String?
+  returnEmpty   Boolean    @default(false)
+  status        TripStatus @default(ASSIGNED)
+  eta           DateTime?
+  startedAt     DateTime?
+  completedAt   DateTime?
+  turnMinutes   Int?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  deletedAt     DateTime?
+
+  // Relations
+  driver       Driver         @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  container    Container      @relation(fields: [containerId], references: [id], onDelete: Cascade)
+  pickupSlot   Slot?          @relation(fields: [pickupSlotId], references: [id], onDelete: SetNull)
+  bookings     SlotBooking[]
+  metrics      TripMetrics?
+  events       TripEvent[]
+
+  @@map("trips")
+}
+
+model TripMetrics {
+  id               String @id @default(cuid())
+  tripId           String @unique
+  totalDistance    Int    @default(0) // km
+  estimatedDuration Int   @default(0) // minutes
+  actualDuration   Int?   // minutes
+  fuelConsumption  Float? // liters
+  carbonFootprint  Float? // kg CO2
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@map("trip_metrics")
+}
+
+model TripEvent {
+  id        String       @id @default(cuid())
+  tripId    String
+  type      TripEventType
+  timestamp DateTime     @default(now())
+  location  Json?        // { lat: number, lng: number }
+  metadata  Json?        // Additional event data
+  createdAt DateTime     @default(now())
+
+  // Relations
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@map("trip_events")
+}
+
+model Event {
+  id        String   @id @default(cuid())
+  type      EventType
+  refId     String?  // container/trip/slot id
+  meta      Json?    // Additional event data
+  createdAt DateTime @default(now())
+
+  @@map("events")
+}
+
+model SystemAlert {
+  id            String        @id @default(cuid())
+  type          AlertType
+  severity      AlertSeverity
+  message       String
+  refId         String?
+  metadata      Json?
+  acknowledged  Boolean       @default(false)
+  acknowledgedAt DateTime?
+  acknowledgedBy String?
+  createdAt     DateTime      @default(now())
+
+  @@map("system_alerts")
+}
+
+// Enums
+enum TerminalStatus {
+  ACTIVE
+  INACTIVE
+  MAINTENANCE
+}
+
+enum VesselStatus {
+  ARRIVING
+  BERTHED
+  DISCHARGING
+  DEPARTED
+}
+
+enum ScheduleStatus {
+  SCHEDULED
+  ARRIVED
+  DEPARTED
+  DELAYED
+  CANCELLED
+}
+
+enum ContainerType {
+  TWENTY_GP
+  FORTY_HC
+  FORTY_GP
+  FORTY_FIVE_HC
+}
+
+enum ContainerStatus {
+  NOT_READY
+  READY
+  PICKED
+  DELIVERED
+  HOLD
+}
+
+enum HoldReason {
+  CUSTOMS_HOLD
+  DOCUMENTATION
+  CHASSIS_SHORTAGE
+  GATE_BLOCKED
+  WEATHER
+  MAINTENANCE
+  OTHER
+}
+
+enum SlotStatus {
+  AVAILABLE
+  FULL
+  CLOSED
+  MAINTENANCE
+}
+
+enum BookingStatus {
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  FAILED
+}
+
+enum DriverStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  ON_TRIP
+}
+
+enum AvailabilityStatus {
+  AVAILABLE
+  BUSY
+  OFF_DUTY
+  SICK_LEAVE
+}
+
+enum TruckType {
+  DRY_VAN
+  REEFER
+  FLATBED
+  CHASSIS
+}
+
+enum TruckStatus {
+  AVAILABLE
+  IN_USE
+  MAINTENANCE
+  OUT_OF_SERVICE
+}
+
+enum TripStatus {
+  ASSIGNED
+  STARTED
+  EN_ROUTE
+  GATE_READY
+  AT_GATE
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum TripEventType {
+  TRIP_STARTED
+  ETA_UPDATED
+  ARRIVED_AT_GATE
+  GATE_PROCESSING
+  CONTAINER_PICKED
+  TRIP_COMPLETED
+  TRIP_FAILED
+  DELAY_DETECTED
+}
+
+enum EventType {
+  VESSEL_ARRIVAL
+  CNTR_READY
+  HOLD_ADDED
+  HOLD_REMOVED
+  TRIP_ASSIGNED
+  TRIP_STARTED
+  TRIP_COMPLETED
+  TRIP_FAILED
+  SLOT_BOOKED
+  SLOT_CANCELLED
+  DRIVER_AVAILABLE
+  DRIVER_BUSY
+  SYSTEM_ALERT
+  METRICS_UPDATED
+}
+
+enum AlertType {
+  CAPACITY_WARNING
+  DELAY_ALERT
+  SYSTEM_ERROR
+  SECURITY_ALERT
+  PERFORMANCE_ISSUE
+}
+
+enum AlertSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
