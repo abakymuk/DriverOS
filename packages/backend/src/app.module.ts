@@ -6,6 +6,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { BullModule } from '@nestjs/bull';
 import { PrismaModule } from './prisma/prisma.module';
+import { SupabaseModule } from './supabase/supabase.module';
 import { HealthModule } from './health/health.module';
 import { AuthModule } from './auth/auth.module';
 import { TerminalsModule } from './terminals/terminals.module';
@@ -55,6 +56,7 @@ import { validateEnv } from './config/env.validation';
 
     // Database
     PrismaModule,
+    SupabaseModule,
 
     // Feature modules
     HealthModule,

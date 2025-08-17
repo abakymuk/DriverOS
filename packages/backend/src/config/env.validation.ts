@@ -22,6 +22,12 @@ const envSchema = z.object({
   JWT_EXPIRES_IN: z.string().default('15m'),
   JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
 
+  // Supabase Configuration
+  SUPABASE_URL: z.string().url(),
+  SUPABASE_ANON_KEY: z.string(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
+  SUPABASE_PROJECT_ID: z.string(),
+
   // External APIs
   GOOGLE_MAPS_API_KEY: z.string().optional(),
   SENTRY_DSN: z.string().url().optional(),

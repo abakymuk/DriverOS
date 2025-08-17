@@ -205,9 +205,15 @@
 - [x] Setup Sentry for error tracking and alerts
 
 ## Current Sprint: Database Schema & Core Domain Models
-- [ ] Create initial Prisma migration
-- [ ] Setup database seeding with test data
-- [ ] Create core domain services (Terminal, Vessel, Container)
-- [ ] Implement CRUD operations with validation
-- [ ] Add API endpoints with Swagger documentation
-- [ ] Setup error handling and logging
+- [x] Setup Supabase configuration and connection strings
+- [x] Create Supabase service and module
+- [x] Setup Next.js frontend with Supabase integration
+- [x] Setup Expo mobile app with Supabase integration
+- [x] Create initial Prisma migration (SQL file for manual execution)
+- [x] Setup database seeding with test data
+- [x] Create core domain services (Terminal, Vessel, Container, Driver, Trip, Slot)
+- [x] Implement CRUD operations with validation
+- [x] Add API endpoints with Swagger documentation
+- [x] Setup error handling and logging
+- [ ] Test API endpoints with seed data
+- [ ] Execute SQL migration in Supabase
