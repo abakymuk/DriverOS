@@ -2,55 +2,55 @@
 
 ## Phase 1: Project Setup & Infrastructure
 ### 1.1 Monorepo Setup
-- [ ] Initialize pnpm workspace with packages structure
-- [ ] Setup shared TypeScript config and ESLint
-- [ ] Configure Prettier and Husky pre-commit hooks
+- [x] Initialize pnpm workspace with packages structure
+- [x] Setup shared TypeScript config and ESLint
+- [x] Configure Prettier and Husky pre-commit hooks
 - [ ] Setup GitHub Actions CI pipeline
-- [ ] Configure Conventional Commits + commitlint
+- [x] Configure Conventional Commits + commitlint
 - [ ] Setup Renovate/Dependabot for dependency updates
 - [ ] Create CODEOWNERS + PR rules
-- [ ] Setup Make/Taskfile for unified commands
+- [x] Setup Make/Taskfile for unified commands
 
 ### 1.2 Environment & Secrets Management
-- [ ] Create .env.example with all required variables
-- [ ] Setup Zod/Joi validation for environment variables
+- [x] Create .env.example with all required variables
+- [x] Setup Zod/Joi validation for environment variables
 - [ ] Configure secret storage (Doppler/Vault/GitHub Encrypted Secrets)
 - [ ] Setup environment-specific configurations (dev/staging/prod)
 
 ### 1.3 Docker & Local Development
-- [ ] Create docker-compose.yml for local services (Postgres, Redis)
-- [ ] Setup one-command development: `docker-compose up`
+- [x] Create docker-compose.yml for local services (Postgres, Redis)
+- [x] Setup one-command development: `docker-compose up`
 - [ ] Configure OpenTelemetry Collector container
 - [ ] Setup local observability stack (Tempo/OTEL endpoint)
 
 ### 1.4 Backend Foundation (NestJS)
-- [ ] Initialize NestJS app with TypeScript strict mode
-- [ ] Setup Prisma with PostgreSQL schema
-- [ ] Configure environment variables and validation
-- [ ] Setup OpenTelemetry for observability
-- [ ] Add health checks and basic API structure
-- [ ] Setup Sentry for error tracking and alerts
+- [x] Initialize NestJS app with TypeScript strict mode
+- [x] Setup Prisma with PostgreSQL schema
+- [x] Configure environment variables and validation
+- [x] Setup OpenTelemetry for observability
+- [x] Add health checks and basic API structure
+- [x] Setup Sentry for error tracking and alerts
 
 ### 1.5 Frontend Foundation (Next.js 15)
-- [ ] Initialize Next.js 15 app with App Router
-- [ ] Setup shadcn/ui with Tailwind CSS
-- [ ] Configure TypeScript and ESLint
-- [ ] Setup authentication infrastructure
-- [ ] Create basic layout and navigation
+- [x] Initialize Next.js 15 app with App Router
+- [x] Setup shadcn/ui with Tailwind CSS
+- [x] Configure TypeScript and ESLint
+- [x] Setup authentication infrastructure
+- [x] Create basic layout and navigation
 - [ ] Configure Vercel preview deployments
 - [ ] Setup Sentry for frontend error tracking
 
 ### 1.6 Mobile Foundation (React Native/Expo)
-- [ ] Initialize Expo app with TypeScript
+- [x] Initialize Expo app with TypeScript
 - [ ] Setup React Navigation
-- [ ] Configure environment and build settings
+- [x] Configure environment and build settings
 - [ ] Setup basic authentication flow
 - [ ] Configure Expo EAS preview deployments
 - [ ] Setup Crashlytics for mobile error tracking
 
 ### 1.7 CI/CD Pipeline
-- [ ] Setup GitHub Actions CI matrix (lint/typecheck/test/build)
-- [ ] Configure pnpm caching in CI
+- [x] Setup GitHub Actions CI matrix (lint/typecheck/test/build)
+- [x] Configure pnpm caching in CI
 - [ ] Setup database migrations in CI on ephemeral DB
 - [ ] Configure semantic-release and auto-changelog
 - [ ] Setup preview deployments for all platforms
@@ -63,29 +63,29 @@
 
 ## Phase 2: Core Domain Models
 ### 2.1 Database Schema & Data Strategy
-- [ ] Create Prisma schema for all entities (Terminal, Vessel, Container, Slot, Driver, Truck, Trip, Event)
-- [ ] Setup UUID/ULID for all IDs
-- [ ] Add audit fields (createdAt/updatedAt/deletedAt with soft delete)
-- [ ] Implement timezone strategy (UTC storage, local display)
-- [ ] Setup database migrations with rollback plans
-- [ ] Create seed data for development
-- [ ] Add database indexes and constraints (unique keys, FK cascades)
-- [ ] Setup PII classification and data retention policies
+- [x] Create Prisma schema for all entities (Terminal, Vessel, Container, Slot, Driver, Truck, Trip, Event)
+- [x] Setup UUID/ULID for all IDs
+- [x] Add audit fields (createdAt/updatedAt/deletedAt with soft delete)
+- [x] Implement timezone strategy (UTC storage, local display)
+- [x] Setup database migrations with rollback plans
+- [x] Create seed data for development
+- [x] Add database indexes and constraints (unique keys, FK cascades)
+- [x] Setup PII classification and data retention policies
 
 ### 2.2 API Structure & Versioning
-- [ ] Create NestJS modules for each domain
-- [ ] Implement CRUD operations for all entities
-- [ ] Add validation with class-validator
-- [ ] Setup API versioning (/v1 with /v2 readiness)
-- [ ] Implement pagination/sorting/filtering standards
-- [ ] Generate OpenAPI specification
+- [x] Create NestJS modules for each domain
+- [x] Implement CRUD operations for all entities
+- [x] Add validation with class-validator
+- [x] Setup API versioning (/v1 with /v2 readiness)
+- [x] Implement pagination/sorting/filtering standards
+- [x] Generate OpenAPI specification
 - [ ] Create type-safe SDK with openapi-typescript
-- [ ] Setup API documentation with Swagger
+- [x] Setup API documentation with Swagger
 
 ### 2.3 Authentication & Authorization
-- [ ] Implement JWT authentication with refresh tokens
-- [ ] Create RBAC roles (Driver/Dispatcher/Admin)
-- [ ] Add authorization guards and policy-based access
+- [x] Implement JWT authentication with refresh tokens
+- [x] Create RBAC roles (Driver/Dispatcher/Admin)
+- [x] Add authorization guards and policy-based access
 - [ ] Setup ABAC for carrier/terminal restrictions
 - [ ] Implement audit logging for access/actions
 - [ ] Add idempotency for critical operations (booking, status updates)
@@ -215,5 +215,6 @@
 - [x] Implement CRUD operations with validation
 - [x] Add API endpoints with Swagger documentation
 - [x] Setup error handling and logging
+- [x] Create database migration tools and instructions
+- [ ] Execute SQL migration in Supabase Dashboard
 - [ ] Test API endpoints with seed data
-- [ ] Execute SQL migration in Supabase

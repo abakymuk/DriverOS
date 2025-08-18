@@ -23,11 +23,12 @@ export const toISOString = (date: Date): ISODateTime => {
 };
 
 export const toISODate = (date: Date): ISODate => {
-  return date.toISOString().split('T')[0];
+  return date.toISOString().split('T')[0] || '';
 };
 
 export const toISOTime = (date: Date): ISOTime => {
-  return date.toISOString().split('T')[1].split('.')[0];
+  const timePart = date.toISOString().split('T')[1];
+  return timePart?.split('.')[0] || '00:00:00';
 };
 
 export const fromISOString = (isoString: ISODateTime): Date => {
@@ -39,7 +40,8 @@ export const fromISODate = (isoDate: ISODate): Date => {
 };
 
 export const fromISOTime = (isoTime: ISOTime, date: Date = new Date()): Date => {
-  const [hours, minutes, seconds] = isoTime.split(':').map(Number);
+  const parts = isoTime.split(':').map(Number);
+  const [hours = 0, minutes = 0, seconds = 0] = parts;
   const result = new Date(date);
   result.setHours(hours, minutes, seconds, 0);
   return result;
@@ -67,7 +69,7 @@ export const isWeekend = (date: Date): boolean => {
 };
 
 export const addMinutes = (date: Date, minutes: number): Date => {
-  return new Date(date.getTime() + minutes * 60 * 1000);
+  return new Date(date.getTime() + (minutes || 0) * 60 * 1000);
 };
 
 export const addHours = (date: Date, hours: number): Date => {

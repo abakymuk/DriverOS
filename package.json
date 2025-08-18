@@ -15,7 +15,10 @@
     "db:migrate": "pnpm --filter backend run db:migrate",
     "db:seed": "pnpm --filter backend run db:seed",
     "db:setup": "./scripts/migrate-db.sh",
-    "prepare": "husky"
+    "prepare": "husky",
+    "audit": "pnpm audit --audit-level moderate",
+    "format": "pnpm --recursive run format",
+    "format:check": "pnpm --recursive run format:check"
   },
   "keywords": [
     "logistics",

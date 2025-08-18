@@ -1,8 +1,16 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateContainerDto, UpdateContainerDto } from './dto';
+import { CreateContainerDto } from './dto/create-container.dto';
+import { UpdateContainerDto } from './dto/update-container.dto';
 import { Container, ContainerHold } from '@prisma/client';
-import { generateUUID } from '@driveros/types';
+// Local UUID generator function
+function generateUUID(): string {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
 
 @Injectable()
 export class ContainersService {
@@ -301,8 +309,11 @@ export class ContainersService {
     return this.prisma.containerHold.create({
       data: {
         id: generateUUID(),
-        containerId: id,
-        ...holdData,
+        container: {
+          connect: { id }
+        },
+        reason: holdData.reason as any,
+        description: holdData.description,
       },
     });
   }

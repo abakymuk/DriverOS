@@ -18,9 +18,6 @@ export async function setupOpenTelemetry(): Promise<void> {
     traceExporter: new OTLPTraceExporter({
       url: `${otelEndpoint}/v1/traces`,
     }),
-    metricExporter: new OTLPMetricExporter({
-      url: `${otelEndpoint}/v1/metrics`,
-    }),
     instrumentations: [
       getNodeAutoInstrumentations({
         '@opentelemetry/instrumentation-http': {

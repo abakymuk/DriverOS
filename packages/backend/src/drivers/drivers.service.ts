@@ -1,8 +1,16 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateDriverDto, UpdateDriverDto } from './dto';
+import { CreateDriverDto } from './dto/create-driver.dto';
+import { UpdateDriverDto } from './dto/update-driver.dto';
 import { Driver, DriverAvailability, DriverMetrics } from '@prisma/client';
-import { generateUUID } from '@driveros/types';
+// Local UUID generator function
+function generateUUID(): string {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
 
 @Injectable()
 export class DriversService {
@@ -188,16 +196,14 @@ export class DriversService {
           : undefined,
         metrics: metrics
           ? {
-              upsert: {
-                create: {
-                  id: generateUUID(),
-                  driverId: id,
-                  ...metrics,
-                },
-                update: {
-                  ...metrics,
-                  updatedAt: new Date(),
-                },
+              create: {
+                id: generateUUID(),
+                totalTrips: metrics.totalTrips,
+                completedTrips: metrics.completedTrips,
+                failedTrips: metrics.failedTrips,
+                averageTurnTime: metrics.averageTurnTime,
+                totalDistance: metrics.totalDistance,
+                rating: metrics.rating,
               },
             }
           : undefined,
@@ -267,8 +273,13 @@ export class DriversService {
     return this.prisma.driverAvailability.create({
       data: {
         id: generateUUID(),
-        driverId: id,
-        ...availabilityData,
+        driver: {
+          connect: { id }
+        },
+        date: availabilityData.date,
+        startTime: availabilityData.startTime,
+        endTime: availabilityData.endTime,
+        status: availabilityData.status as any,
       },
     });
   }
@@ -290,7 +301,10 @@ export class DriversService {
     return this.prisma.driverAvailability.update({
       where: { id: availabilityId },
       data: {
-        ...availabilityData,
+        date: availabilityData.date,
+        startTime: availabilityData.startTime,
+        endTime: availabilityData.endTime,
+        status: availabilityData.status as any,
         updatedAt: new Date(),
       },
     });
@@ -317,10 +331,20 @@ export class DriversService {
       create: {
         id: generateUUID(),
         driverId: id,
-        ...metricsData,
+        totalTrips: metricsData.totalTrips,
+        completedTrips: metricsData.completedTrips,
+        failedTrips: metricsData.failedTrips,
+        averageTurnTime: metricsData.averageTurnTime,
+        totalDistance: metricsData.totalDistance,
+        rating: metricsData.rating,
       },
       update: {
-        ...metricsData,
+        totalTrips: metricsData.totalTrips,
+        completedTrips: metricsData.completedTrips,
+        failedTrips: metricsData.failedTrips,
+        averageTurnTime: metricsData.averageTurnTime,
+        totalDistance: metricsData.totalDistance,
+        rating: metricsData.rating,
         updatedAt: new Date(),
       },
     });
