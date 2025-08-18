@@ -1,8 +1,16 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateSlotDto, UpdateSlotDto } from './dto';
+import { CreateSlotDto } from './dto/create-slot.dto';
+import { UpdateSlotDto } from './dto/update-slot.dto';
 import { Slot, SlotBooking } from '@prisma/client';
-import { generateUUID } from '@driveros/types';
+// Local UUID generator function
+function generateUUID(): string {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
 
 @Injectable()
 export class SlotsService {

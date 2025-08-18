@@ -485,3 +485,35 @@ enum AlertSeverity {
   HIGH
   CRITICAL
 }
+
+// Authentication models - Profile table linked to auth.users
+model Profile {
+  id        String   @id @db.Uuid
+  email     String   @unique
+  firstName String
+  lastName  String
+  roleId    String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  // Relations
+  role Role @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  @@map("profiles")
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  permissions Json     // Array of permission strings
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  profiles Profile[]
+
+  @@map("roles")
+}

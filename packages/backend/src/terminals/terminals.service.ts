@@ -1,36 +1,61 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateTerminalDto, UpdateTerminalDto } from './dto';
+import { CreateTerminalDto } from './dto/create-terminal.dto';
+import { UpdateTerminalDto } from './dto/update-terminal.dto';
 import { Terminal, TerminalSettings } from '@prisma/client';
-import { generateUUID } from '@driveros/types';
+import { PaginationDto, PaginationResponseDto } from '../common/dto/pagination.dto';
+import { createPaginationResponse, getPaginationSkip, getPaginationTake } from '../common/utils/pagination.util';
+
+// Simple UUID generator function
+function generateUUID(): string {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
 
 @Injectable()
 export class TerminalsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(): Promise<Terminal[]> {
-    return this.prisma.terminal.findMany({
-      where: { deletedAt: null },
-      include: {
-        settings: true,
-        vessels: {
-          where: { deletedAt: null },
-          include: {
-            schedules: true,
+  async findAll(pagination?: PaginationDto): Promise<PaginationResponseDto<Terminal> | Terminal[]> {
+    const skip = pagination ? getPaginationSkip(pagination) : 0;
+    const take = pagination ? getPaginationTake(pagination) : 1000; // Default limit when no pagination
+    
+    const [terminals, total] = await Promise.all([
+      this.prisma.terminal.findMany({
+        where: { deletedAt: null },
+        include: {
+          settings: true,
+          vessels: {
+            where: { deletedAt: null },
+            include: {
+              schedules: true,
+            },
+          },
+          containers: {
+            where: { deletedAt: null },
+            include: {
+              holds: true,
+            },
+          },
+          slots: {
+            where: { deletedAt: null },
           },
         },
-        containers: {
-          where: { deletedAt: null },
-          include: {
-            holds: true,
-          },
-        },
-        slots: {
-          where: { deletedAt: null },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take,
+      }),
+      pagination ? this.prisma.terminal.count({ where: { deletedAt: null } }) : 0,
+    ]);
+
+    if (pagination) {
+      return createPaginationResponse(terminals, total, pagination);
+    }
+
+    return terminals;
   }
 
   async findOne(id: string): Promise<Terminal> {
@@ -90,15 +115,21 @@ export class TerminalsService {
       throw new ConflictException(`Terminal with code ${terminalData.code} already exists`);
     }
 
+    const terminalId = generateUUID();
+
     return this.prisma.terminal.create({
       data: {
-        id: generateUUID(),
+        id: terminalId,
         ...terminalData,
         settings: settings
           ? {
               create: {
                 id: generateUUID(),
-                ...settings,
+                slotDuration: settings.slotDuration,
+                maxSlotsPerWindow: settings.maxSlotsPerWindow,
+                operatingHours: settings.operatingHours,
+                closedDays: settings.closedDays,
+                specialRules: settings.specialRules,
               },
             }
           : undefined,
@@ -142,11 +173,18 @@ export class TerminalsService {
               upsert: {
                 create: {
                   id: generateUUID(),
-                  terminalId: id,
-                  ...settings,
+                  slotDuration: settings.slotDuration,
+                  maxSlotsPerWindow: settings.maxSlotsPerWindow,
+                  operatingHours: settings.operatingHours,
+                  closedDays: settings.closedDays,
+                  specialRules: settings.specialRules,
                 },
                 update: {
-                  ...settings,
+                  slotDuration: settings.slotDuration,
+                  maxSlotsPerWindow: settings.maxSlotsPerWindow,
+                  operatingHours: settings.operatingHours,
+                  closedDays: settings.closedDays,
+                  specialRules: settings.specialRules,
                   updatedAt: new Date(),
                 },
               },

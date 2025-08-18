@@ -1,5 +1,13 @@
-import { PrismaClient } from '@prisma/client';
-import { generateUUID } from '@driveros/types';
+const { PrismaClient } = require('@prisma/client');
+
+// Simple UUID generator function
+function generateUUID(): string {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
 
 const prisma = new PrismaClient();
 
@@ -234,12 +242,15 @@ async function main() {
   const driverNames = ['John Smith', 'Maria Garcia', 'David Johnson', 'Sarah Wilson', 'Michael Brown'];
   
   for (let i = 0; i < 5; i++) {
+    const driverName = driverNames[i];
+    if (!driverName) continue;
+    
     const driver = await prisma.driver.create({
       data: {
         id: generateUUID(),
-        name: driverNames[i],
+        name: driverName,
         phone: `+1-555-${String(i + 100).padStart(3, '0')}`,
-        email: `${driverNames[i].toLowerCase().replace(' ', '.')}@example.com`,
+        email: `${driverName.toLowerCase().replace(' ', '.')}@example.com`,
         status: 'ACTIVE',
         licenseNumber: `CA${String(i + 1000).padStart(6, '0')}`,
         licenseExpiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year from now
@@ -278,7 +289,7 @@ async function main() {
         failedTrips: Math.floor(Math.random() * 5),
         averageTurnTime: Math.floor(Math.random() * 60) + 30,
         totalDistance: Math.floor(Math.random() * 10000) + 5000,
-        rating: (Math.random() * 2 + 3).toFixed(1), // 3.0 to 5.0
+        rating: parseFloat((Math.random() * 2 + 3).toFixed(1)), // 3.0 to 5.0
       },
     });
   }
@@ -288,10 +299,13 @@ async function main() {
   // Create trucks
   const trucks = [];
   for (let i = 0; i < 5; i++) {
+    const driver = drivers[i];
+    if (!driver) continue;
+    
     const truck = await prisma.truck.create({
       data: {
         id: generateUUID(),
-        driverId: drivers[i].id,
+        driverId: driver.id,
         plate: `CA${String(i + 1000).padStart(4, '0')}AB`,
         carrier: `Carrier ${i + 1}`,
         type: i % 2 === 0 ? 'CHASSIS' : 'DRY_VAN',
@@ -327,12 +341,18 @@ async function main() {
   const trips = [];
   
   for (let i = 0; i < Math.min(3, readyContainers.length); i++) {
+    const driver = drivers[i];
+    const container = readyContainers[i];
+    const slot = slots[0];
+    
+    if (!driver || !container || !slot) continue;
+    
     const trip = await prisma.trip.create({
       data: {
         id: generateUUID(),
-        driverId: drivers[i].id,
-        containerId: readyContainers[i].id,
-        pickupSlotId: slots[0].id,
+        driverId: driver.id,
+        containerId: container.id,
+        pickupSlotId: slot.id,
         returnEmpty: i % 2 === 0,
         status: 'ASSIGNED',
         eta: new Date(Date.now() + (i + 1) * 60 * 60 * 1000),
@@ -345,13 +365,20 @@ async function main() {
 
   // Create slot bookings
   for (let i = 0; i < trips.length; i++) {
+    const trip = trips[i];
+    const driver = drivers[i];
+    const container = readyContainers[i];
+    const slot = slots[0];
+    
+    if (!trip || !driver || !container || !slot) continue;
+    
     await prisma.slotBooking.create({
       data: {
         id: generateUUID(),
-        slotId: slots[0].id,
-        tripId: trips[i].id,
-        driverId: drivers[i].id,
-        containerId: readyContainers[i].id,
+        slotId: slot.id,
+        tripId: trip.id,
+        driverId: driver.id,
+        containerId: container.id,
         status: 'CONFIRMED',
       },
     });
@@ -367,8 +394,8 @@ async function main() {
         tripId: trip.id,
         totalDistance: Math.floor(Math.random() * 50) + 10,
         estimatedDuration: Math.floor(Math.random() * 60) + 30,
-        fuelConsumption: (Math.random() * 10 + 5).toFixed(2),
-        carbonFootprint: (Math.random() * 5 + 2).toFixed(2),
+        fuelConsumption: parseFloat((Math.random() * 10 + 5).toFixed(2)),
+        carbonFootprint: parseFloat((Math.random() * 5 + 2).toFixed(2)),
       },
     });
   }
@@ -400,14 +427,16 @@ async function main() {
     },
   });
 
-  await prisma.event.create({
-    data: {
-      id: generateUUID(),
-      type: 'CNTR_READY',
-      refId: readyContainers[0].id,
-      meta: { container: readyContainers[0].cntrNo, terminal: terminal1.code },
-    },
-  });
+  if (readyContainers[0]) {
+    await prisma.event.create({
+      data: {
+        id: generateUUID(),
+        type: 'CNTR_READY',
+        refId: readyContainers[0].id,
+        meta: { container: readyContainers[0].cntrNo, terminal: terminal1.code },
+      },
+    });
+  }
 
   console.log('✅ Created system events');
 
@@ -423,18 +452,62 @@ async function main() {
     },
   });
 
-  await prisma.systemAlert.create({
+  if (holdContainer1?.id) {
+    await prisma.systemAlert.create({
+      data: {
+        id: generateUUID(),
+        type: 'DELAY_ALERT',
+        severity: 'HIGH',
+        message: 'Container MSCU0000031234 delayed due to customs hold',
+        refId: holdContainer1.id,
+        metadata: { delayReason: 'CUSTOMS_HOLD', estimatedDelay: '2 hours' },
+      },
+    });
+  }
+
+  console.log('✅ Created system alerts');
+
+  // Create roles
+  const adminRole = await prisma.role.create({
     data: {
       id: generateUUID(),
-      type: 'DELAY_ALERT',
-      severity: 'HIGH',
-      message: 'Container MSCU0000031234 delayed due to customs hold',
-      refId: holdContainer1?.id,
-      metadata: { delayReason: 'CUSTOMS_HOLD', estimatedDelay: '2 hours' },
+      name: 'Admin',
+      description: 'Full system access',
+      permissions: ['read', 'write', 'delete', 'admin'],
     },
   });
 
-  console.log('✅ Created system alerts');
+  const dispatcherRole = await prisma.role.create({
+    data: {
+      id: generateUUID(),
+      name: 'Dispatcher',
+      description: 'Dispatch and monitoring access',
+      permissions: ['read', 'write'],
+    },
+  });
+
+  const driverRole = await prisma.role.create({
+    data: {
+      id: generateUUID(),
+      name: 'Driver',
+      description: 'Driver mobile app access',
+      permissions: ['read'],
+    },
+  });
+
+  console.log('✅ Created roles');
+
+  // Note: Profiles are linked to auth.users, so you would normally create them
+  // after users are registered through Supabase auth. For demo purposes,
+  // we'll create dummy profile entries that would be created after auth signup.
+  
+  console.log('ℹ️ Profiles should be created after users sign up through Supabase auth');
+  console.log('ℹ️ The following profile data would be created upon user registration:');
+  console.log('   - admin@driveros.com (Admin role)');
+  console.log('   - dispatcher@driveros.com (Dispatcher role)');
+  console.log('   - driver emails (Driver role)');
+  
+  console.log('✅ Profiles configuration ready');
 
   console.log('🎉 Database seeding completed successfully!');
 }

@@ -8,13 +8,21 @@ import {
   Delete,
   Query,
   ParseUUIDPipe,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { TerminalsService } from './terminals.service';
-import { CreateTerminalDto, UpdateTerminalDto } from './dto';
+import { CreateTerminalDto } from './dto/create-terminal.dto';
+import { UpdateTerminalDto } from './dto/update-terminal.dto';
+import { PaginationDto, PaginationResponseDto } from '../common/dto/pagination.dto';
+import { Terminal } from '@prisma/client';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @ApiTags('terminals')
 @Controller('terminals')
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
 export class TerminalsController {
   constructor(private readonly terminalsService: TerminalsService) {}
 
@@ -27,10 +35,14 @@ export class TerminalsController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all terminals' })
-  @ApiResponse({ status: 200, description: 'List of terminals' })
-  findAll() {
-    return this.terminalsService.findAll();
+  @ApiOperation({ summary: 'Get all terminals with pagination' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'List of terminals',
+    type: PaginationResponseDto<Terminal>
+  })
+  findAll(@Query() pagination: PaginationDto) {
+    return this.terminalsService.findAll(pagination);
   }
 
   @Get(':id')

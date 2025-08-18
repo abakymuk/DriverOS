@@ -6,15 +6,15 @@ import { VesselStatus, ScheduleStatus } from '@prisma/client';
 export class CreateVesselScheduleDto {
   @ApiProperty({ description: 'Terminal ID' })
   @IsString()
-  terminalId: string;
+  terminalId!: string;
 
   @ApiProperty({ description: 'Estimated time of arrival' })
   @IsDateString()
-  eta: string;
+  eta!: string;
 
   @ApiProperty({ description: 'Estimated time of departure' })
   @IsDateString()
-  etd: string;
+  etd!: string;
 
   @ApiPropertyOptional({ description: 'Actual arrival time' })
   @IsOptional()
@@ -28,29 +28,29 @@ export class CreateVesselScheduleDto {
 
   @ApiProperty({ description: 'Schedule status', enum: ScheduleStatus })
   @IsEnum(ScheduleStatus)
-  status: ScheduleStatus;
+  status!: ScheduleStatus;
 }
 
 export class CreateVesselDto {
   @ApiProperty({ description: 'Vessel name' })
   @IsString()
-  name: string;
+  name!: string;
 
   @ApiProperty({ description: 'Estimated time of arrival' })
   @IsDateString()
-  eta: string;
+  eta!: string;
 
   @ApiProperty({ description: 'Terminal ID' })
   @IsString()
-  terminalId: string;
+  terminalId!: string;
 
   @ApiProperty({ description: 'Vessel status', enum: VesselStatus })
   @IsEnum(VesselStatus)
-  status: VesselStatus;
+  status!: VesselStatus;
 
   @ApiProperty({ description: 'Number of containers' })
   @IsNumber()
-  containerCount: number;
+  containerCount!: number;
 
   @ApiPropertyOptional({ description: 'Vessel schedules' })
   @IsOptional()

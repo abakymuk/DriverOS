@@ -1,8 +1,16 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateTripDto, UpdateTripDto } from './dto';
+import { CreateTripDto } from './dto/create-trip.dto';
+import { UpdateTripDto } from './dto/update-trip.dto';
 import { Trip, TripMetrics, TripEvent } from '@prisma/client';
-import { generateUUID } from '@driveros/types';
+// Local UUID generator function
+function generateUUID(): string {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
 
 @Injectable()
 export class TripsService {
@@ -278,11 +286,18 @@ export class TripsService {
               upsert: {
                 create: {
                   id: generateUUID(),
-                  tripId: id,
-                  ...metrics,
+                  totalDistance: metrics.totalDistance,
+                  estimatedDuration: metrics.estimatedDuration,
+                  actualDuration: metrics.actualDuration,
+                  fuelConsumption: metrics.fuelConsumption,
+                  carbonFootprint: metrics.carbonFootprint,
                 },
                 update: {
-                  ...metrics,
+                  totalDistance: metrics.totalDistance,
+                  estimatedDuration: metrics.estimatedDuration,
+                  actualDuration: metrics.actualDuration,
+                  fuelConsumption: metrics.fuelConsumption,
+                  carbonFootprint: metrics.carbonFootprint,
                   updatedAt: new Date(),
                 },
               },

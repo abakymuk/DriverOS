@@ -77,9 +77,9 @@ export class HealthController {
   @Get('live')
   @HealthCheck()
   async live(): Promise<HealthCheckResult> {
-    return {
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-    };
+          return {
+        status: 'ok',
+        details: {},
+      };
   }
 }
